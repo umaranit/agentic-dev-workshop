@@ -20,13 +20,13 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Get newly added issue files
+      - name: Get newly added or modified issue files
         id: get-files
         run: |
-          ADDED=$(git diff --name-status HEAD~1 HEAD | grep '^A' | grep 'issues/.*\.md' | awk '{print $2}')
-          echo "Added files: $ADDED"
+          CHANGED=$(git diff --name-status HEAD~1 HEAD | grep '^[AM]' | grep 'issues/.*\.md' | awk '{print $2}')
+          echo "Changed files: $CHANGED"
           echo "files<<EOF" >> $GITHUB_OUTPUT
-          echo "$ADDED" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Ensure labels exist
@@ -46,7 +46,7 @@ jobs:
           FILES="${{ steps.get-files.outputs.files }}"
 
           if [ -z "$FILES" ]; then
-            echo "No new issue files found. Skipping."
+            echo "No changed issue files found. Skipping."
             exit 0
           fi
 
@@ -63,8 +63,8 @@ jobs:
 
             echo "Title: [$TITLE]"
 
-            # Exact match duplicate check
-            EXISTING=$(gh issue list --state all --limit 100 --json title \
+            # Exact match duplicate check — paginated
+            EXISTING=$(gh issue list --state all --limit 500 --json title \
               --jq --arg t "$TITLE" '.[] | select(.title == $t) | .title' \
               | head -1)
 

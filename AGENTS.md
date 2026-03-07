@@ -1,12 +1,12 @@
 # AGENTS.md
 
-Instructions for GitHub Copilot Coding Agent when assigned a GitHub Issue in this repository.
+Instructions for GitHub Copilot Coding Agent when assigned a GitHub Issue.
 
 ## Before You Start
-Read these files first:
+Read these files first — in this order:
 1. `.github/copilot-instructions.md` — project context and standards
-2. The assigned GitHub Issue — feature requirements and acceptance criteria
-3. `docs/design/design-doc.md` — architecture and API contracts
+2. The assigned GitHub Issue — requirements and acceptance criteria
+3. `docs/design/design-doc.md` — architecture and API contracts (if it exists)
 4. `src/prisma/schema.prisma` — current data model
 
 ## What Is Pre-built — Do Not Touch
@@ -16,15 +16,18 @@ Read these files first:
 - `src/frontend/src/App.tsx` — React Router and auth guard
 - `src/frontend/src/pages/LoginPage.tsx`
 - `src/frontend/src/pages/RegisterPage.tsx`
-- `src/prisma/schema.prisma` User, Restaurant, MenuItem models
+- `src/frontend/src/pages/LoginPage.tsx`
+- `src/frontend/src/pages/RegisterPage.tsx`
+- `src/prisma/schema.prisma` User model — do not modify the User model
 
 ## Issue Assignment Guide
 
 ### [DATABASE] Issues — Architect assigns
 You are responsible for:
-- Adding Cart and CartItem models to `src/prisma/schema.prisma`
-- Running `npx prisma migrate dev --name add-cart`
+- Adding new domain models to `src/prisma/schema.prisma`
+- Running `npx prisma migrate dev --name {descriptive-name}`
 - Running `npx prisma generate`
+- Adding domain seed data to `src/prisma/seed.ts` if the Issue requires it
 
 Do not touch backend or frontend files.
 
@@ -39,24 +42,30 @@ Do not touch frontend files or schema.prisma.
 
 ### [FRONTEND] Issues — UI Dev assigns
 You are responsible for:
-- `src/frontend/src/pages/` — new page files only
-- `src/frontend/src/components/` — new component files only
-- `src/frontend/src/context/` — new context files only
-- `src/frontend/src/services/` — new API service files only
-- `src/frontend/src/components/Navbar.tsx` — add CartIcon only
+- `src/frontend/src/pages/` — new and updated page files
+- `src/frontend/src/components/` — new component files
+- `src/frontend/src/context/` — new context files
+- `src/frontend/src/services/` — new API service files
+- `src/frontend/src/components/Navbar.tsx` — only if the Issue requires changes
+
+**HomePage update — always required:**
+`src/frontend/src/pages/HomePage.tsx` currently shows a placeholder.
+Replace its content with the primary feature component this Issue builds.
+The user must see real feature UI after login — not "Features coming soon".
 
 All interactive elements must have `data-testid` attributes.
+The exact `data-testid` values are specified in the Issue.
 Do not touch backend files or schema.prisma.
 
 ## Implementation Order
 Always implement in this order to avoid dependency failures:
-1. [DATABASE] — schema must exist before API
-2. [BACKEND] — API must exist before frontend
+1. [DATABASE] — schema must exist before API can reference models
+2. [BACKEND]  — API must exist before frontend can fetch data
 3. [FRONTEND] — connects to working API
 
 ## PR Conventions
-- Link PR to the originating Issue
-- PR title format: `feat: [feature name] [Issue type]`
+- Link PR to the originating Issue using `Closes #N`
+- PR title format: `feat: {feature name} [{issue type}]`
 - Run `npm run lint` before raising PR — fix all errors
 - Run `npm run build` — confirm it succeeds
 - Do not merge your own PR — leave for human review
@@ -66,7 +75,7 @@ Always implement in this order to avoid dependency failures:
 # Backend
 cd src/backend && npm run dev
 
-# Frontend  
+# Frontend
 cd src/frontend && npm run dev
 
 # Database

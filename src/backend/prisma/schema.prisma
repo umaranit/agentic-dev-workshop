@@ -16,26 +16,6 @@ model User {
   createdAt DateTime @default(now())
 }
 
-// PRE-BUILT — do not modify
-model Restaurant {
-  id          Int        @id @default(autoincrement())
-  name        String
-  description String
-  imageUrl    String
-  menuItems   MenuItem[]
-  createdAt   DateTime   @default(now())
-}
-
-// PRE-BUILT — do not modify
-model MenuItem {
-  id           Int        @id @default(autoincrement())
-  restaurantId Int
-  name         String
-  description  String
-  price        Float
-  imageUrl     String
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
-}
-
-// Cart and CartItem models are added by the [DATABASE] Issue
-// during the workshop — design-agent produces the schema additions
+// All domain models are added during the workshop.
+// The design-agent produces schema additions based on the BRD and Issues.
+// The Coding Agent runs migrations when assigned the [DATABASE] Issue.

@@ -11,10 +11,10 @@ app.use(express.json())
 // Pre-built routes
 app.use('/api/auth', authRoutes)
 
-// Cart routes are added by [BACKEND] Issue during workshop
+// Feature routes are added by [BACKEND] Issues during the workshop
 
 app.listen(PORT, () => {
-  console.log(`FoodOrder API running on port ${PORT}`)
+  console.log(`API server running on port ${PORT}`)
 })
 
 export default app

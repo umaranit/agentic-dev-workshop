@@ -1,277 +1,241 @@
 ---
 name: create-user-stories
-description: Decomposes a BRD into role-specific GitHub Issue files covering frontend,
-  backend, database and E2E testing. Writes one .md file per issue to the issues/ folder.
-  A GitHub Actions workflow reads these files and creates the Issues automatically on merge.
+description: Decomposes a BRD into atomic INVEST-compliant GitHub Issue files.
+  One file per functional slice per role. Written directly into issues/ folder.
+  Derives all content from the BRD and copilot-instructions.md — no hardcoded values.
 ---
 
 # Skill — Create User Stories
 
-## What You Do
-Read the BRD and write one markdown file per role per feature into the `issues/` folder.
-Each file starts with an H1 heading (the Issue title) followed by the Issue body.
-When the PR is merged, GitHub Actions creates the Issues automatically.
+## Before You Write Anything
 
-## Steps
-1. Read `docs/requirements/BRD.md`
-2. Identify features from the functional requirements
-3. For each feature write 4 files — one per role — into `issues/`
-4. Raise a PR with all files
-5. Confirm with a summary of all files created
+Read these two files first — everything you write derives from them:
 
-## Issue Roles
-For every feature, create exactly these 4 files:
+1. `.github/copilot-instructions.md`
+   - App context and domain
+   - Tech stack
+   - What is pre-built (never rebuild these)
+   - Test user credentials
+   - Coding standards
 
-| File | Prefix | Owner | Covers |
-|------|--------|-------|--------|
-| `issues/frontend.md` | [FRONTEND] | UI Developer | React components, pages, UI behaviour |
-| `issues/backend.md` | [BACKEND] | Backend Developer | API endpoints, controllers, services |
-| `issues/database.md` | [DATABASE] | Architect | Prisma schema additions, migrations |
-| `issues/playwright.md` | [PLAYWRIGHT] | QA Engineer | E2E user journey, assertions |
+2. `docs/requirements/BRD.md`
+   - Feature requirements
+   - Functional requirement IDs
+   - Out of scope items
 
-## File Format
+---
 
-The FIRST LINE must be an H1 heading — this becomes the GitHub Issue title.
-Everything after becomes the Issue body.
+## Core Principle — INVEST
 
-### issues/frontend.md
+Every issue must be:
+- **I**ndependent — one functional slice, not all features combined
+- **N**egotiable — describes what, not how
+- **V**aluable — delivers a demonstrable outcome to the user
+- **E**stimable — a developer can size it in minutes
+- **S**mall — completable in one focused session (half a day max)
+- **T**estable — 2-4 specific, verifiable acceptance criteria
+
+---
+
+## Step 1 — Identify Functional Slices
+
+Group the BRD functional requirements into workflow steps.
+Each workflow step that produces a demonstrable user outcome = one slice.
+
 ```
-# [FRONTEND] {Feature Name}
+FOR EACH SLICE ASK:
+  "Can a user complete a meaningful journey with just this slice?"
+  If yes → valid slice
+
+SLICE SIZING RULE:
+  Primary slice   → simplest complete journey — 3-5 FRs max
+  Extension slice → additional capability built on top — 3-5 FRs max
+```
+
+Label slices using the actual domain language from the BRD.
+Do not use generic names like "slice-1" or "feature-a".
+
+---
+
+## Step 2 — Determine Files Per Slice
+
+For each slice, only create role files where work is actually needed:
+
+| Role | File naming | Create when |
+|------|-------------|-------------|
+| DATABASE | `issues/database-{slice}.md` | New Prisma models needed |
+| BACKEND | `issues/backend-{slice}.md` | New API endpoints needed |
+| FRONTEND | `issues/frontend-{slice}.md` | New UI components needed |
+| PLAYWRIGHT | `issues/playwright-{feature}.md` | One file per feature — full journey |
+
+Use kebab-case slice names derived from the BRD domain language.
+
+---
+
+## Step 3 — Write Each File
+
+### DATABASE issue format
+```
+# [DATABASE] {Slice Name — from BRD}
 
 ## User Story
-As a {role} I want to {action} so that {benefit}
+As a system I need {specific models from BRD} so that {specific benefit}
 
 ## Context
-{What already exists that this builds on}
-
-## What to Build
-- {Component 1}
-- {Component 2}
-- {Component 3}
-
-## Acceptance Criteria
-- [ ] {UI behaviour criterion 1}
-- [ ] {UI behaviour criterion 2}
-- [ ] {UI behaviour criterion 3}
-```
-
-### issues/backend.md
-```
-# [BACKEND] {Feature Name}
-
-## User Story
-As a system I need to {action} so that {benefit}
-
-## Context
-{What already exists — middleware, auth, app setup etc.}
-
-## API Endpoints
-- METHOD /api/path — description
-
-## Acceptance Criteria
-- [ ] {endpoint} returns {status} with {shape}
-- [ ] All endpoints return 401 without valid JWT
-- [ ] {Validation criterion}
-```
-
-### issues/database.md
-```
-# [DATABASE] {Feature Name}
-
-## User Story
-As a system I need {data models} so that {benefit}
-
-## Context
-{Existing models this builds on}
+Pre-built models from copilot-instructions.md:
+- {list each pre-built model that is relevant}
+This issue adds only the models required for this slice.
 
 ## Models to Add
 {ModelName}
-- field: type
-- field: type
+- fieldName: Type — description
 
 ## Relationships
-- {Entity A} has {one/many} {Entity B}
+- {Entity A} has one/many {Entity B}
 
 ## Acceptance Criteria
 - [ ] Migration runs without errors
-- [ ] Models have correct fields and relations
-- [ ] Existing models unchanged
+- [ ] {specific model} created with correct fields and relations
+- [ ] Pre-built models and existing data unchanged
 ```
 
-### issues/playwright.md
+**Rules:**
+- Derive model names from BRD domain language
+- Maximum 2 models per issue — split if more needed
+- Reference pre-built models from copilot-instructions.md in Context
+- Never repeat models defined in other issues
+
+---
+
+### BACKEND issue format
 ```
-# [PLAYWRIGHT] {Feature Name}
+# [BACKEND] {Slice Name — from BRD}
 
 ## User Story
-As a QA engineer I want to verify {feature} end to end
-
-## User Journey
-1. {Step 1 — action}
-2. {Step 2 — action}
-3. {Step 3 — expected result}
-
-## Test Credentials
-Email: test@foodorder.com
-Password: password123
-
-## Acceptance Criteria
-- [ ] Full journey passes end to end
-- [ ] {Assertion 1}
-- [ ] {Assertion 2}
-```
-
-## Example (Add to Cart Feature)
-
-### issues/frontend.md
-```
-# [FRONTEND] Add to Cart
-
-## User Story
-As a customer I want to add menu items to my cart so that I can place an order.
+As a {user type from BRD} I want to {action} so that {benefit}
 
 ## Context
-Auth is pre-built (LoginPage, RegisterPage, JWT token in localStorage).
-Navbar component exists at src/frontend/src/components/Navbar.tsx.
-HomePage exists with restaurant placeholder cards.
-This issue adds cart UI on top of the existing scaffold.
-
-## What to Build
-- CartIcon component in Navbar showing item count badge
-- CartDrawer slide-out panel listing cart items with quantity and total
-- Add to Cart button on each menu item card
-- All interactive elements must have data-testid attributes
-
-## Acceptance Criteria
-- [ ] Cart icon appears in Navbar with count badge showing number of items
-- [ ] Clicking cart icon opens CartDrawer from the right
-- [ ] CartDrawer lists items with name, quantity, and price
-- [ ] Add to Cart button on each menu item updates the count
-- [ ] Removing an item from CartDrawer updates count correctly
-- [ ] All elements have data-testid for Playwright tests
-```
-
-### issues/backend.md
-```
-# [BACKEND] Add to Cart
-
-## User Story
-As a system I need to serve restaurant data and manage cart state
-so that customers can browse menus and build their orders.
-
-## Context
-Express server runs at src/backend/src/index.ts on port 3001.
-Auth middleware exists at src/backend/src/middleware/auth.ts.
-JWT verification is already implemented.
-This issue adds restaurant, menu, and cart routes.
+Pre-built from copilot-instructions.md:
+- {list relevant pre-built backend pieces — middleware, routes, etc.}
+This issue adds only the endpoints required for this slice.
 
 ## API Endpoints
-- GET /api/restaurants — list all restaurants
-- GET /api/restaurants/:id/menu — list menu items for a restaurant
-- GET /api/cart — get current user cart (requires JWT)
-- POST /api/cart/items — add item to cart (requires JWT)
-- PUT /api/cart/items/:id — update item quantity (requires JWT)
-- DELETE /api/cart/items/:id — remove item from cart (requires JWT)
+- METHOD /api/{path} — description
+  Request: {body shape if applicable}
+  Response: {response shape}
+  Auth: required / not required
 
 ## Acceptance Criteria
-- [ ] GET /api/restaurants returns array of restaurants with id, name, description, imageUrl
-- [ ] GET /api/restaurants/:id/menu returns array of menu items
-- [ ] GET /api/cart returns cart with items for authenticated user
-- [ ] POST /api/cart/items adds item and returns updated cart
-- [ ] PUT /api/cart/items/:id updates quantity and returns updated cart
-- [ ] DELETE /api/cart/items/:id removes item and returns updated cart
-- [ ] All cart endpoints return 401 without valid JWT
+- [ ] {endpoint} returns {HTTP status} with {response shape}
+- [ ] Protected endpoints return 401 without valid JWT
+- [ ] {specific validation or error case from BRD}
 ```
 
-### issues/database.md
+**Rules:**
+- Derive endpoint paths from BRD domain language
+- Maximum 3-4 endpoints per issue — split if more needed
+- Always specify HTTP method, path, request and response shape
+- Always include 401 criterion for protected endpoints
+- Reference pre-built middleware from copilot-instructions.md
+
+---
+
+### FRONTEND issue format
 ```
-# [DATABASE] Add to Cart
+# [FRONTEND] {Slice Name — from BRD}
 
 ## User Story
-As a system I need Cart and CartItem models so that user cart state
-can be persisted across sessions.
+As a {user type from BRD} I want to {action} so that {benefit}
 
 ## Context
-Prisma schema at src/backend/prisma/schema.prisma.
-User model already exists with id, email, password, name.
-Restaurant and MenuItem models need to be added.
-This issue adds all missing models.
+Pre-built from copilot-instructions.md:
+- {list relevant pre-built frontend pieces — pages, components, router}
+HomePage.tsx currently shows a placeholder — this Issue replaces its
+content with the primary feature component below.
+API endpoints available: {list endpoints from the corresponding BACKEND issue}
 
-## Models to Add
-Restaurant
-- id: Int @id @default(autoincrement())
-- name: String
-- description: String
-- imageUrl: String
-- menuItems: MenuItem[]
+## What to Build
+- {ComponentName} — what it does
 
-MenuItem
-- id: Int @id @default(autoincrement())
-- restaurantId: Int
-- restaurant: Restaurant
-- name: String
-- description: String
-- price: Float
-- imageUrl: String
+## HomePage Update
+Replace the placeholder content in HomePage.tsx to render {PrimaryComponent}.
+The user must see real feature UI immediately after login.
 
-Cart
-- id: Int @id @default(autoincrement())
-- userId: Int @unique
-- user: User
-- items: CartItem[]
-- createdAt: DateTime @default(now())
-
-CartItem
-- id: Int @id @default(autoincrement())
-- cartId: Int
-- cart: Cart
-- menuItemId: Int
-- menuItem: MenuItem
-- quantity: Int @default(1)
-
-## Relationships
-- User has one Cart
-- Cart has many CartItems
-- CartItem belongs to one MenuItem
-- Restaurant has many MenuItems
+## data-testid Values
+Every interactive and key display element must have a data-testid.
+Playwright tests will use these — list them explicitly:
+- `{testid-value}` — on {element description}
 
 ## Acceptance Criteria
-- [ ] Migration runs without errors
-- [ ] All 4 models created with correct fields
-- [ ] Relations are correct and Prisma Client generates without errors
-- [ ] Existing User model and auth flow unchanged
+- [ ] {specific UI behaviour derived from BRD acceptance criteria}
+- [ ] All data-testid values listed above are present on correct elements
 ```
 
-### issues/playwright.md
+**Rules:**
+- Derive component names from BRD domain language
+- Maximum 3-4 components per issue — split if more needed
+- Always list data-testid values — playwright-agent reads these
+- Reference pre-built components from copilot-instructions.md
+- List the API endpoints this UI calls
+
+---
+
+### PLAYWRIGHT issue format
 ```
-# [PLAYWRIGHT] Add to Cart
+# [PLAYWRIGHT] {Feature Name — from BRD}
 
 ## User Story
-As a QA engineer I want to verify the full add-to-cart journey end to end
-so that we can ship with confidence.
+As a QA engineer I want to verify the {feature} journey end to end
 
-## User Journey
-1. Navigate to http://localhost:5173/login
-2. Enter email: test@foodorder.com and password: password123
-3. Click Login button — expect redirect to /home
-4. See restaurant list — click on Pizza Palace
-5. See menu items — click Add to Cart on Margherita Pizza
-6. Verify cart icon in Navbar shows count badge with 1
-7. Click cart icon — CartDrawer opens from the right
-8. Verify Margherita Pizza appears in CartDrawer with quantity 1
-9. Click remove button on the item
-10. Verify CartDrawer shows empty state
-11. Verify Navbar cart count returns to 0
+## Primary Journey — {Slice Name}
+One action per step with expected result:
+1. {action} — expect {result}
+2. {action} — expect {result}
+...
 
 ## Test Credentials
-Email: test@foodorder.com
-Password: password123
+{Copy from copilot-instructions.md — do not invent}
+
+## data-testid Reference
+These must match the data-testid values in the FRONTEND issues exactly:
+- `{testid-value}` — used to {assertion description}
 
 ## Acceptance Criteria
-- [ ] Login journey completes and redirects to /home
-- [ ] Restaurant list is visible on /home
-- [ ] Menu items load when a restaurant is selected
-- [ ] Add to Cart updates the cart count in Navbar
-- [ ] CartDrawer opens and shows correct items
-- [ ] Removing item updates count and shows empty state
-- [ ] All assertions use data-testid selectors
+- [ ] Full journey passes without errors
+- [ ] All selectors use data-testid only — no CSS classes or text content
+- [ ] {specific end state assertion from BRD}
+
+---
+
+## Extension Journey — {Extension Slice Name} (optional)
+> Only run if extension slice issues are implemented and merged.
+
+1. {action} — expect {result}
+```
+
+**Rules:**
+- One PLAYWRIGHT file per feature — covers primary + optional extension
+- Derive test steps from BRD user journey and acceptance criteria
+- data-testid values must match FRONTEND issues exactly
+- Test credentials come from copilot-instructions.md — never hardcode
+- All selectors must use data-testid — never CSS classes or text
+
+---
+
+## Quality Checklist Before Raising PR
+
+For every file you write, verify:
+
+```
+✅ Title is an H1 heading — will become the GitHub Issue title
+✅ User story follows "As a... I want... so that..." format
+✅ Context lists pre-built work from copilot-instructions.md
+✅ FRONTEND issues include "HomePage Update" section with primary component
+✅ Scope is limited to this slice only
+✅ Acceptance criteria are specific and verifiable — not vague
+✅ 2-4 acceptance criteria max — not a laundry list
+✅ FRONTEND issues list all data-testid values
+✅ PLAYWRIGHT data-testid values match FRONTEND issues
+✅ No content duplicated from copilot-instructions.md
+✅ No content invented — everything derived from BRD or copilot-instructions
 ```

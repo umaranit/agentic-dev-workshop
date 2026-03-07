@@ -1,70 +1,40 @@
-# FoodOrder — Copilot Instructions
+# Workshop App — Copilot Instructions
 
 ## Project
-FoodOrder is a web application where customers browse restaurants,
-view menus, and add items to a cart.
+A web application scaffold for the Agentic SDLC Workshop.
+The application domain and feature are defined in Issue #1 and the BRD.
+Read those files to understand what is being built before writing any code.
 
 ## Tech Stack
-- Backend: Node.js + Express + TypeScript
+- Backend:  Node.js + Express + TypeScript
 - Frontend: React + TypeScript + Vite
 - Database: SQLite via Prisma ORM
-- Auth: JWT (pre-built — do not rebuild)
-- Testing: Jest (unit) + Playwright (E2E)
+- Auth:     JWT (pre-built — do not rebuild)
+- Testing:  Jest (unit) + Playwright (E2E)
 
-## What Is Pre-built
-The following already exist in the repo — never rebuild them:
-- Login and Register pages (src/frontend/src/pages/LoginPage.tsx, RegisterPage.tsx)
-- JWT auth middleware (src/backend/middleware/auth.ts)
-- Auth routes (src/backend/routes/auth.ts)
-- Navbar shell component (src/frontend/src/components/Navbar.tsx) — empty, no cart icon yet
-- React app entry point, Router, protected route wrapper
+## What Is Pre-built — Never Rebuild These
+- Login and Register pages
+- JWT auth middleware    → src/backend/middleware/auth.ts
+- Auth routes            → src/backend/routes/auth.ts
+- Express app entry      → src/backend/index.ts
+- React app entry        → src/frontend/src/main.tsx
+- Router + auth guard    → src/frontend/src/App.tsx
+- Navbar shell           → src/frontend/src/components/Navbar.tsx
+- User Prisma model      → src/prisma/schema.prisma
 
-## Data Models Only (No API or UI Implementation)
-These models exist in schema.prisma with seed data, but have NO routes, controllers, or frontend pages:
-- User, Restaurant, MenuItem Prisma models
-- Seed data — 2 restaurants (Pizza Palace, Burger Barn), 6 menu items, 1 test user
-- **Important:** Restaurant listing API and menu viewing UI do NOT exist — build them in this workshop
+## What Is Workshop Work — Agents Build This
+- All domain models (added to schema.prisma by design-agent / Coding Agent)
+- All API routes and controllers
+- All feature UI components and pages
+- All seed data beyond the test user
+- All Jest unit tests
+- All Playwright E2E tests
+- HomePage content — the placeholder ("Features coming soon") is replaced
+  by the [FRONTEND] Issue's primary feature component
 
-## Feature in Scope
-This workshop builds: **Restaurant Browsing and Shopping Cart**
-
-**Restaurant Discovery & Menu Browsing:**
-- List restaurants (name + description only, no images)
-- View menu items per restaurant (name, description, price — no images)
-- Navigate between restaurant list and menu pages
-
-**Shopping Cart:**
-- Add menu items to cart with quantity management
-- Adjust quantity using +/- buttons
-- Cart persists per user
-- Cart icon in Navbar shows total item count (sum of quantities)
-- Cart drawer shows items with quantity controls and cart total
-- Remove items from cart
-
-**Simplifications for 4-hour timeline:**
-- No images for restaurants or menu items
-- Basic styling only (functional over fancy)
-- Core test coverage (happy paths, minimal edge cases)
-
-## Out of Scope
-- Payment processing
-- Order placement
-- Delivery tracking
-- Restaurant admin features
-- Restaurant or menu item images
-- Advanced UI animations or transitions
-- Restaurant search/filtering
-- Menu item customization (size options, add-ons)
-- Comprehensive error handling UI
-- Extensive edge case testing
-
-## Design Constraints
-To complete the workshop in 4 hours, follow these constraints:
-- **No images:** All restaurant and menu item displays are text-only
-- **Minimal styling:** Basic CSS for layout and functionality, no complex animations
-- **Single cart per user:** Cart automatically created on first item addition
-- **Quantity logic:** Adding duplicate item increments existing cart item quantity
-- **Testing scope:** Happy path + authentication tests only, skip extensive edge cases
+## Test User Credentials
+- Email:    test@example.com
+- Password: password123
 
 ## Coding Standards
 - TypeScript strict mode — no `any`
@@ -94,12 +64,8 @@ src/
     └── seed.ts
 ```
 
-## Test User Credentials
-- Email: test@foodorder.com
-- Password: password123
-
 ## Never
 - Rebuild auth
 - Use `any` in TypeScript
 - Skip `data-testid` on interactive elements
-- Touch pre-built files unless explicitly asked
+- Touch pre-built files unless the Issue explicitly requires it

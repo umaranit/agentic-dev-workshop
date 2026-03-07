@@ -4,7 +4,7 @@ Use this as the content when creating Issue #1 at the start of the workshop.
 
 ---
 
-**Issue Title:** `[REQUIREMENT] Food Order App`
+**Issue Title:** `[REQUIREMENT] Add to Cart`
 
 **Issue Body:**
 

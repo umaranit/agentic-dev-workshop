@@ -1,134 +1,147 @@
 ---
 name: generate-playwright-tests
-description: Generates Playwright E2E test scripts from user story Issues covering
-  complete user journeys. Use when asked to generate E2E tests, Playwright tests,
-  browser tests, or end-to-end test scripts.
+description: Generates Playwright E2E test scripts from the [PLAYWRIGHT] GitHub Issue.
+  Use when asked to generate E2E tests, Playwright tests, browser tests, or
+  end-to-end test scripts.
 ---
 
 # Skill — Generate Playwright Tests
 
-## What You Do
-Read the [PLAYWRIGHT] GitHub Issue and produce Playwright E2E test scripts
-that verify complete user journeys in the browser.
+## Before You Write Anything
+
+Read these files first:
+1. `.github/copilot-instructions.md` — test credentials, app context
+2. The [PLAYWRIGHT] GitHub Issue — exact journey steps and data-testid values
+3. `docs/design/design-doc.md` — data-testid values and component structure
+4. `src/frontend/src/` — verify data-testid values exist in components
+
+Derive all selectors from the [PLAYWRIGHT] Issue and design-doc.
+Do not invent selectors — if a data-testid is not in the Issue or design-doc,
+note it in the PR description as missing.
+
+---
 
 ## Steps
-1. Read the [PLAYWRIGHT] GitHub Issue — identify the user journey
-2. Read `docs/design/design-doc.md` — get data-testid values
-3. Read `src/frontend/src/` — understand component structure
-4. Generate test files in `e2e/`
-5. Raise PR with test files
+1. Read [PLAYWRIGHT] Issue — get journey steps and data-testid reference
+2. Read design-doc component tree — verify data-testid values
+3. Write test files in `e2e/` folder
+4. Raise a PR — note any missing data-testid values in PR description
 
-## Selector Convention — Non-Negotiable
-Always use `data-testid` attributes. Never use CSS classes or text content.
-
-```typescript
-// CORRECT
-page.locator('[data-testid="add-to-cart-button"]')
-
-// WRONG — brittle, breaks on style changes
-page.locator('.btn-primary')
-page.locator('text=Add to Cart')
-```
-
-If a component is missing `data-testid` — note it in the PR description
-so the UI Dev can add it before tests are run.
+---
 
 ## Test File Structure
-```typescript
-// Journey: {journey name}
-// Source: GitHub Issue #{number}
 
+```typescript
 import { test, expect } from '@playwright/test'
 
-test.describe('{Feature Name}', () => {
+// Credentials from copilot-instructions.md
+const TEST_EMAIL = process.env.TEST_USER_EMAIL || 'test@example.com'
+const TEST_PASSWORD = process.env.TEST_USER_PASSWORD || 'password123'
+
+test.describe('{Feature} journey', () => {
 
   test.beforeEach(async ({ page }) => {
-    // Login before each test
+    // Login before each test — do not repeat this inside tests
     await page.goto('/login')
-    await page.fill('[data-testid="email-input"]', 'test@foodorder.com')
-    await page.fill('[data-testid="password-input"]', 'password123')
-    await page.click('[data-testid="login-button"]')
+    await page.getByTestId('email-input').fill(TEST_EMAIL)
+    await page.getByTestId('password-input').fill(TEST_PASSWORD)
+    await page.getByTestId('login-button').click()
     await page.waitForURL('**/home')
   })
 
-  test('{journey description}', async ({ page }) => {
-    // Step 1
-    // Step 2
-    // Assert
+  test('{journey description from [PLAYWRIGHT] Issue}', async ({ page }) => {
+    // Follow the steps from the [PLAYWRIGHT] Issue exactly
+    // One action per step — assert after each significant action
   })
 
 })
 ```
 
-## Assertion Rules
-Every action must be followed by an assertion. Never fire and forget.
+---
 
-| What to check | Playwright assertion |
-|---------------|---------------------|
-| Element visible | `expect(locator).toBeVisible()` |
-| Element count | `expect(locator).toHaveCount(n)` |
-| Text content | `expect(locator).toHaveText('text')` |
-| URL changed | `expect(page).toHaveURL('/path')` |
-| Input value | `expect(locator).toHaveValue('value')` |
-| Not visible | `expect(locator).not.toBeVisible()` |
+## Selector Rules — Non-negotiable
+
+```
+✅ ALWAYS use: page.getByTestId('{testid}')
+❌ NEVER use:  page.locator('.css-class')
+❌ NEVER use:  page.locator('#id')
+❌ NEVER use:  page.getByText('visible text')
+❌ NEVER use:  page.locator('button:nth-child(2)')
+```
+
+data-testid values come from the [PLAYWRIGHT] Issue.
+If a needed selector is not listed — add a note in the PR description.
+
+---
+
+## Test Structure Rules
+
+### One focused assertion per test
+```typescript
+// CORRECT — focused test, one thing being verified
+test('should show feature list after login', async ({ page }) => {
+  await expect(page.getByTestId('feature-list')).toBeVisible()
+  await expect(page.getByTestId('feature-item').first()).toBeVisible()
+})
+
+// WRONG — testing entire journey in one test is fragile
+test('do everything', async ({ page }) => {
+  // 20 actions and assertions...
+})
+```
+
+### Always assert after actions
+```typescript
+// Every click/fill/navigate needs a following assertion
+await page.getByTestId('submit-button').click()
+await expect(page.getByTestId('success-message')).toBeVisible() // ← assert
+
+await page.goto('/some-route')
+await expect(page.getByTestId('page-heading')).toBeVisible() // ← assert
+```
+
+### Use waitForURL or waitFor for navigation
+```typescript
+await page.getByTestId('nav-link').click()
+await page.waitForURL('**/target-path')
+// now safe to assert on new page content
+```
+
+---
 
 ## Journey Mapping
-Break the Issue journey into discrete test cases.
-One test per distinct assertion point — not one giant test.
+
+Translate each step in the [PLAYWRIGHT] Issue to a test action:
+
+| Issue step | Playwright action |
+|-----------|------------------|
+| Navigate to X | `await page.goto('/x')` |
+| Click {element} | `await page.getByTestId('{testid}').click()` |
+| Fill {field} with {value} | `await page.getByTestId('{testid}').fill('{value}')` |
+| Expect {element} visible | `await expect(page.getByTestId('{testid}')).toBeVisible()` |
+| Expect {text} | `await expect(page.getByTestId('{testid}')).toContainText('{text}')` |
+| Expect count | `await expect(page.getByTestId('{testid}')).toHaveCount({n})` |
+
+---
+
+## Missing data-testid Handling
+
+If a component is missing a required data-testid:
+- Do NOT use a CSS fallback selector
+- Comment the test step with: `// TODO: data-testid '{name}' missing from component`
+- List all missing testids in the PR description under "Missing Selectors"
+- The UI Dev must add them before tests can pass
+
+---
+
+## Quality Checklist
 
 ```
-WRONG — one giant test
-test('full cart journey', async ({ page }) => {
-  // 20 steps and 10 assertions in one test
-  // if step 5 fails you don't know where
-})
-
-CORRECT — focused tests
-test('should add item and update cart count', ...)
-test('should show item in cart drawer', ...)
-test('should remove item from cart', ...)
-```
-
-## Run Instructions to Include in PR
-```bash
-# Ensure dev servers are running first
-cd src/backend && npm run dev    # port 3001
-cd src/frontend && npm run dev   # port 5173
-
-# Run tests
-npx playwright test
-npx playwright test --ui          # visual mode — recommended for workshop
-npx playwright show-report        # view HTML report after run
-```
-
-## On Missing data-testid
-If a required `data-testid` is missing from a component:
-- Write the test as if it exists
-- Add a comment: `// Requires data-testid="{value}" on {ComponentName}`
-- Note in PR description which components need updating
-
-## Example Tests (Add to Cart)
-```typescript
-test('should add item to cart and show count', async ({ page }) => {
-  await page.goto('/restaurants/1/menu')
-  await page.locator('[data-testid="add-to-cart-button"]').first().click()
-  await expect(page.locator('[data-testid="cart-count"]')).toHaveText('1')
-})
-
-test('should open drawer and show added item', async ({ page }) => {
-  await page.goto('/restaurants/1/menu')
-  await page.locator('[data-testid="add-to-cart-button"]').first().click()
-  await page.locator('[data-testid="cart-icon"]').click()
-  await expect(page.locator('[data-testid="cart-drawer"]')).toBeVisible()
-  await expect(page.locator('[data-testid="cart-item"]')).toHaveCount(1)
-})
-
-test('should remove item and reset count', async ({ page }) => {
-  await page.goto('/restaurants/1/menu')
-  await page.locator('[data-testid="add-to-cart-button"]').first().click()
-  await page.locator('[data-testid="cart-icon"]').click()
-  await page.locator('[data-testid="remove-item-button"]').first().click()
-  await expect(page.locator('[data-testid="cart-item"]')).toHaveCount(0)
-  await expect(page.locator('[data-testid="cart-count"]')).toHaveText('0')
-})
+✅ All selectors use getByTestId — no CSS or text selectors
+✅ Credentials use env vars with fallback to copilot-instructions values
+✅ beforeEach handles login — not repeated inside individual tests
+✅ Every action has a following assertion
+✅ Journey steps match the [PLAYWRIGHT] Issue exactly
+✅ Missing data-testid values documented in PR description
+✅ No production code modified — e2e/ files only
 ```

@@ -1,8 +1,10 @@
 # Agentic SDLC Workshop — Facilitator Notes
 
-**Duration:** 4 hours  
-**Participants:** 5 (one per role)  
-**Prerequisites:** GitHub accounts, repo access, Node.js 20+ installed
+**Duration:** 2-3 hours
+**Participants:** 5 (one per role)
+**Goal:** One complete vertical slice — primary feature end to end
+**Extension:** Additional slices for fast groups with time to spare
+**Prerequisites:** GitHub accounts, repo access, VS Code installed
 
 ---
 
@@ -10,128 +12,165 @@
 
 ### Repository Setup
 - [ ] Create a new GitHub repository — private
-- [ ] Push all scaffold files from this repo to main branch
-- [ ] Confirm `.github/copilot-instructions.md` exists on main
-- [ ] Confirm `.github/agents/` has all 5 `.agent.md` files on main
-- [ ] Confirm `.github/skills/` has all 5 `SKILL.md` files on main
-- [ ] Confirm `AGENTS.md` exists on main
-- [ ] Confirm `playwright.config.ts` exists at repo root
-- [ ] Confirm `docs/design/.gitkeep` and `docs/test-reports/.gitkeep` exist
+- [ ] Push all scaffold files from this repo
+- [ ] Confirm `.github/copilot-instructions.md` is on main branch
+- [ ] Confirm `.github/agents/` has all 5 `.agent.md` files
+- [ ] Confirm `.github/skills/` has all 5 `SKILL.md` files
+- [ ] Confirm `AGENTS.md` is on main branch
+- [ ] Confirm `issues/` folder exists with only `.gitkeep` inside
+- [ ] Confirm `.github/workflows/create-issues.yml` is on main branch
+
+### GitHub Actions Setup ⚠️ REQUIRED — Do This First
+- [ ] Go to repo → Settings → Actions → General
+- [ ] Under **Workflow permissions** → select **Read and write permissions**
+- [ ] Click **Save**
+
+> Without this the `create-issues` workflow will fail with:
+> `GraphQL: Resource not accessible by integration`
+> This is a repo-level setting — the workflow YAML alone is not enough.
 
 ### GitHub Configuration
-- [ ] Enable GitHub Copilot for the repository (repo settings → Copilot)
-- [ ] Enable Copilot Coding Agent (repo settings → Copilot → Coding Agent → Enable)
-- [ ] Enable custom agents (repo settings → Copilot → Agents → Enable)
-- [ ] GitHub MCP server is built-in and enabled by default — no manual setup needed
-- [ ] Verify GitHub MCP write permission is enabled
-      repo settings → Copilot → Coding Agent → MCP permissions → Issues: Write
-- [ ] Add all 5 participant GitHub accounts as collaborators with Write access
+- [ ] Enable GitHub Copilot for the repository
+- [ ] Enable Copilot Coding Agent — repo settings → Copilot → Coding Agent
+- [ ] Enable custom agents — repo settings → Copilot → Agents
+- [ ] Add all participant GitHub accounts as collaborators with Write access
 
-### Local Setup — Each Participant Machine
+### Local Setup (Each Participant Machine)
 - [ ] `git clone <repo-url>`
 - [ ] `cd src/backend && npm install`
 - [ ] `cd src/frontend && npm install`
-- [ ] `npm install` at repo root (for Playwright)
-- [ ] `cd src/backend && cp .env.example .env`
+- [ ] `cp .env.example .env`
 - [ ] `cd src/backend && npx prisma migrate dev --name init`
 - [ ] `cd src/backend && npx prisma db seed`
 - [ ] `cd src/backend && npm run dev` → confirm running on port 3001
 - [ ] `cd src/frontend && npm run dev` → confirm running on port 5173
-- [ ] Open `http://localhost:5173` → login with `test@foodorder.com / password123`
-- [ ] Confirm the app loads and auth works
+- [ ] Login with credentials from `.github/copilot-instructions.md`
+- [ ] Confirm app loads and auth works
 
 ### Verify Agents Work
 - [ ] Go to github.com → repo → Copilot → Agents
 - [ ] Confirm all 5 custom agents appear in the dropdown
-- [ ] Confirm Copilot Coding Agent is available when assigning an Issue
-- [ ] Do a test run: assign brd-agent with a dummy instruction, confirm it responds
+- [ ] Confirm Copilot Coding Agent is available for Issue assignment
 
 ---
 
-## Workshop Schedule
+## Workshop Reset Procedure
 
-| Time | Phase | Activity |
-|------|-------|----------|
-| 0:00–0:15 | Intro | Facilitator presents agentic SDLC concept |
-| 0:15–0:30 | Setup | Participants clone repo, verify app runs locally |
-| 0:30–0:50 | Phase 1 | PM runs brd-agent and user-story-agent |
-| 0:50–1:10 | Phase 2 | Architect runs design-agent, assigns DATABASE Issue |
-| 1:10–1:50 | Phase 3 | Backend Dev and UI Dev assign Issues to Coding Agent (parallel) |
-| 1:50–2:05 | Phase 4 | Backend Dev runs unit-test-agent |
-| 2:05–2:25 | Phase 5 | QA runs playwright-agent, executes tests |
-| 2:25–2:35 | Demo | Group watches Playwright visual runner projected on screen |
-| 2:35–3:00 | Debrief | Facilitated discussion |
+> Use this between cohorts or when running the workshop again from scratch.
+> Participants never need to do this.
 
----
-
-## Intro Talking Points (15 min)
-
-**The concept:**
-> "Today you will build a working, tested feature using AI agents at every
-> step of the SDLC. You are not pair programming with AI. You are directing
-> autonomous agents that do the work and raise PRs for you to review."
-
-**Key distinction — make this explicit:**
-> "These agents are not chat assistants. You do not have a conversation
-> with them. You assign them a task, they go away, do the work in the
-> background, and come back with a Pull Request. Your job is to review
-> and merge — or reject and reassign with feedback."
-
-**The human role:**
-> "The goal is not to remove developers. It is to shift the developer's
-> role from writing every line to reviewing, guiding, and making
-> architectural decisions. The PR review gate is your checkpoint.
-> The agents handle the repetitive scaffolding. You focus on quality."
-
-**Show the pipeline on screen** before starting:
 ```
-Issue #1 → BRD → 4 Issues → Design Doc → DATABASE → BACKEND → FRONTEND → Tests
+Step 1  repo → Issues → select all → Close issues
+Step 2  Delete all .md files inside issues/ folder
+        Leave .gitkeep in place
+Step 3  Commit and push deletion to main
+Step 4  Ready for next run
+```
+
+---
+
+## How the Issues Pipeline Works
+
+```
+user-story-agent
+  → reads copilot-instructions.md (app context)
+  → reads BRD.md (feature requirements)
+  → identifies functional slices
+  → writes issue .md files to issues/ folder
+  → raises PR
+
+PM reviews PR → merges to main
+
+GitHub Actions (create-issues.yml) triggers automatically
+  → reads each .md file in issues/
+  → exact-match duplicate check — skips already-created issues
+  → creates GitHub Issue with correct label
+  → done
 ```
 
 ---
 
 ## Issue #1 — Create This Before Workshop Starts
 
-Go to GitHub → New Issue → paste this exactly.
+The requirement Issue triggers the entire pipeline.
+Write this based on the feature you have chosen for the workshop.
+It should be a concise business requirement — not a technical spec.
 
-**Title:**
-```
-[REQUIREMENT] Add to Cart
-```
+**Suggested format:**
 
-**Body:**
 ```
+Title: [REQUIREMENT] {Feature Name}
+
+Body:
 ## Feature Name
-Add to Cart
+{Feature name}
 
 ## Business Context
-FoodOrder needs a cart feature so customers can collect items from a
-restaurant menu before placing an order. Without a cart, customers
-cannot select multiple items in a single session.
+{Why this feature is needed — 2-3 sentences}
 
 ## What Users Can Do
-- Browse a list of available restaurants
-- View the menu for a selected restaurant
-- Add a menu item to their cart
-- View current cart contents in a slide-out drawer
-- Remove items from the cart
-- See a running item count on the cart icon in the navigation bar
+- {User action 1}
+- {User action 2}
+- {User action 3}
 
 ## Out of Scope
-- Payment processing
-- Order submission
-- Delivery tracking
-- Browsing multiple restaurants in one cart session
+- {Explicitly excluded item 1}
+- {Explicitly excluded item 2}
 
 ## Acceptance Criteria
-- [ ] Logged-in users can add items from a restaurant menu to their cart
-- [ ] Cart icon in navbar shows current item count
-- [ ] Cart drawer shows all items with name, price and quantity
-- [ ] Users can remove individual items from the cart
-- [ ] Cart persists for the duration of the session
+- [ ] {High-level criterion 1}
+- [ ] {High-level criterion 2}
+- [ ] {High-level criterion 3}
 ```
 
-Add label: `requirement` — then submit.
+Submit with label: `requirement`
+
+> Keep this requirement focused. The smaller and clearer the requirement,
+> the better the agents perform. One feature with 3-5 user actions
+> is ideal for a 2-3 hour workshop.
+
+---
+
+## Workshop Schedule
+
+| Time | Phase | Who | What |
+|------|-------|-----|------|
+| 0:00 | Intro | Facilitator | Agentic SDLC concept — 15 min |
+| 0:15 | Setup | All | Clone repo, verify app runs — 15 min |
+| 0:30 | Phase 1 | PM | brd-agent + user-story-agent — 20 min |
+| 0:50 | Phase 2 | Architect | design-agent + assign DATABASE — 20 min |
+| 1:10 | Phase 3 | Backend Dev | Assign BACKEND Issue to Copilot — 20 min |
+| 1:30 | Phase 4 | UI Dev | Assign FRONTEND Issue to Copilot — 20 min |
+| 1:50 | Phase 5 | QA | playwright-agent + run tests — 20 min |
+| 2:10 | Demo | All | npx playwright test --ui on screen — 10 min |
+| 2:20 | Debrief | All | Discussion — 20 min |
+| 2:40 | Extension | Fast groups | Additional slices if time allows |
+| 3:00 | End | | |
+
+---
+
+## Intro Talking Points (15 min)
+
+**The concept:**
+> "Today you will take a single business requirement all the way to
+> tested, working code — using AI agents at every step of the SDLC.
+> You are not pair programming with AI. You are directing autonomous
+> agents that do the work and raise PRs for your review."
+
+**Key distinction:**
+> "These agents are not chat assistants. You assign a task, they go away,
+> do the work, and come back with a Pull Request. Your job is to review
+> and merge — or reject and give feedback."
+
+**The goal:**
+> "By the end of this workshop we will have one complete vertical slice
+> running end to end with passing Playwright tests — built entirely by
+> agents, reviewed and guided by you."
+
+**On agent quality:**
+> "Agents make mistakes. That is intentional. The PR review gate is
+> where your expertise matters. Watch for missing data-testid attributes,
+> wrong response shapes, or scope creep — these are real review skills."
 
 ---
 
@@ -139,168 +178,153 @@ Add label: `requirement` — then submit.
 
 ### Phase 1 — PM (0:30–0:50)
 
-**Watch for:** PM trying to chat back and forth with the agent.
-Remind them — one clear instruction, then wait. Do not keep adding messages.
+**Watch for:** PM trying to chat with the agent. Remind them — one
+instruction, then wait. Do not keep adding messages.
 
-**Common issue:** brd-agent raises PR but BRD is vague or missing sections.
-PM can add a review comment: "Expand functional requirements with specific
-acceptance criteria." Agent will update the PR.
+**brd-agent:** Should produce a BRD with numbered functional requirements
+(FR-001, FR-002...) and an explicit out of scope section.
+If BRD is too vague — PM adds a PR comment asking for more detail.
+Agent will update the PR.
 
-**Common issue:** user-story-agent creates Issues but they are thin.
-Check: does the [BACKEND] Issue list all 6 API endpoints? Does [PLAYWRIGHT]
-describe a step-by-step journey? If not, PM can comment on the Issue and
-reassign the agent with: "Expand the [BACKEND] Issue to include all API
-endpoint definitions with HTTP methods and paths."
+**user-story-agent:** Reads copilot-instructions.md and BRD.
+Derives functional slices from the BRD — not from hardcoded templates.
+Creates one issue file per role per slice.
+Primary slice files come first — extension files are additional.
 
-**Gate to Phase 2:** All 4 Issues visible on the Issues tab with acceptance criteria.
+**After merge:** GitHub Actions creates Issues automatically.
+PM confirms Issues visible in Issues tab with correct labels
+before handing off to Architect.
+
+**Signal to move on:** Issues visible with correct labels.
 
 ---
 
 ### Phase 2 — Architect (0:50–1:10)
 
-**Watch for:** design-agent producing a schema without defining relations.
-Architect should verify CartItem has both `cartId` and `menuItemId` as
-foreign keys with explicit `@relation` decorators.
+**Watch for:** design-agent producing schema that does not match
+the [DATABASE] Issue. Check models, fields, and relations match exactly.
 
-**Watch for:** data-testid values missing from the component tree in design-doc.
-This will break Phase 5. If missing, Architect should comment on the PR
-requesting: "Add data-testid values to the component tree section."
+**Critical gate:** DATABASE PR must be merged before Phase 3.
+Backend Dev cannot reference models that do not exist in schema.
 
-**Common issue:** Mermaid diagrams render with syntax errors.
-Not a blocker — merge and move on. Note it in debrief as a quality gap.
+**data-testid contract:** design-agent should list data-testid values
+in the design doc component tree. These flow to FRONTEND Issue
+and then to Playwright tests. If missing — Architect adds a PR comment.
 
-**Critical gate:** DATABASE PR must be merged before Phase 3 starts.
-Backend Dev cannot write API code without Cart models in the schema.
-Hold Phase 3 until you confirm migration ran: `npx prisma generate` should
-show Cart and CartItem in the generated client.
+**Signal to move on:** DATABASE migration PR merged successfully.
 
 ---
 
-### Phase 3 — Backend Dev + UI Dev (1:10–1:50)
+### Phase 3 — Backend Dev (1:10–1:30)
 
-**This phase runs in parallel.** Both can assign their Issues at the same time.
-UI Dev will wait idle once their Issue is assigned — their components will
-not work until the BACKEND PR merges. That is fine — use the time to review
-the design doc and prepare for the PR review.
-
-**Watch for Backend Dev:** Coding Agent sometimes puts all logic in the route
-file rather than separating into controller and service. Not a blocker for
-the workshop — but call it out in debrief as an architecture concern.
-
-**Watch for UI Dev:** Missing `data-testid` attributes on components.
-If the reviewer catches this in PR review — have them request changes with
-specific comment: "Add data-testid='cart-icon' to CartIcon component."
-This is a good teaching moment about the PR review gate working as intended.
+**Large PR guidance:** Coding Agent may implement multiple endpoints
+in one PR. Focus review on:
+```
+1. Auth middleware on all protected routes
+2. Response shapes match the [BACKEND] Issue spec exactly
+3. Correct HTTP status codes (200, 201, 401, 404)
+```
+Participants do not need to review every line — that is not the point.
 
 **Common issue:** CORS error when frontend calls backend.
-Confirm `src/frontend/vite.config.ts` proxy is pointing to `http://localhost:3001`.
-Confirm backend is running on port 3001 not another port.
+Confirm `vite.config.ts` proxy is set to `http://localhost:3001`.
 
-**Common issue:** Prisma client not regenerated after DATABASE migration.
-Run `cd src/backend && npx prisma generate` to fix.
-
-**Gate to Phase 4:** Both BACKEND and FRONTEND PRs merged.
-Verify manually: login → browse restaurant → add item → cart count updates → drawer opens.
+**Signal to move on:** BACKEND PR merged. Server starts without errors.
 
 ---
 
-### Phase 4 — Backend Dev (1:50–2:05)
+### Phase 4 — UI Dev (1:30–1:50)
 
-**Watch for:** unit-test-agent generating tests that only check status codes.
-Good tests validate response shape. Point to a specific test and ask:
-"What does this test tell us about the shape of the response?"
+**Critical check:** Are all data-testid values from the [FRONTEND] Issue
+present in the components? If missing — UI Dev adds a PR comment.
+This is a key teaching moment — the data-testid contract flows from
+Issue → component → Playwright test. A break here fails tests later.
 
-**Common issue:** Tests fail because the test database has no seed data.
-The `beforeAll` login step requires `test@foodorder.com` to exist.
-If seed was not run: `cd src/backend && npx prisma db seed`.
+**Test locally:** Walk the user journey manually before merging.
+Does it work end to end using real API data?
 
-**Common issue:** Jest cannot find Prisma client.
-Run `npx prisma generate` first to ensure the client reflects the latest schema.
-
-**Gate to Phase 5:** `npm run test` passes — all green.
+**Signal to move on:** FRONTEND PR merged. Journey works in browser.
 
 ---
 
-### Phase 5 — QA (2:05–2:25)
+### Phase 5 — QA (1:50–2:10)
 
-**Watch for:** playwright-agent using CSS class selectors instead of data-testid.
-This violates the skill instructions. Have QA request changes on the PR:
-"All selectors must use data-testid attributes per the skill instructions."
-Good governance teaching moment — the agent can be corrected via PR review.
+**Watch for:** playwright-agent using CSS selectors instead of data-testid.
+Have QA add a PR comment requesting correction.
+This is the governance teaching moment — agents can get this wrong,
+PR review is the safety net.
 
-**Common issue:** Tests fail because data-testid values in tests do not
-match what was implemented. Walk through the failure:
-- design-agent defined testid values in design-doc
-- UI Dev should have followed them
-- playwright-agent reads them from design-doc
-Find where the chain broke. This is one of the best learning moments in the workshop.
+**Common failure:** data-testid values in tests do not match components.
+Walk through as a process failure — where did the chain break?
+data-testid defined in [FRONTEND] Issue → implemented in component
+→ referenced in [PLAYWRIGHT] Issue → used in Playwright test.
+Find the break point.
 
-**Common issue:** Both dev servers must be running for tests to pass.
-Confirm: backend on 3001, frontend on 5173 before running.
-
-**Gate to demo:** At least the happy path test passes in `--ui` mode.
-Partial pass is fine — run the demo with what works.
+**Signal to move on:** `npx playwright test --ui` — primary journey passes.
 
 ---
 
-## Demo Moment (2:25–2:35)
+## Demo Moment (2:10–2:20)
 
-Project the screen. Run from the repo root:
+Project `npx playwright test --ui` on screen for the group.
 
-```bash
-npm run test:e2e:ui
-```
+Walk through each step of the test journey.
+After each step narrate which agent contributed to making it work:
+- "The schema that makes this data exist — design-agent + Coding Agent"
+- "The API returning this data — Coding Agent from the [BACKEND] Issue"
+- "The component displaying it — Coding Agent from the [FRONTEND] Issue"
+- "This test step itself — playwright-agent from the [PLAYWRIGHT] Issue"
 
-Walk the group through each test executing in the browser. Narrate:
-- "This login step was generated by playwright-agent reading the design doc"
-- "This data-testid was defined by design-agent and implemented by UI Dev"
-- "This assertion was written by playwright-agent from the [PLAYWRIGHT] Issue"
-
-After the run, open the report:
-
-```bash
-npm run test:e2e:report
-```
-
-Show `docs/test-reports/index.html` — a shareable artefact of the workshop.
+End with all green. Let it sit for a moment before moving to debrief.
 
 ---
 
-## Debrief Questions (25 min)
+## Debrief Questions (20 min)
 
 **On agent quality:**
-- Where did an agent produce output that needed human correction?
+- Where did an agent produce output that needed correction?
 - What would have happened if you merged without reviewing?
-- Which agent produced the highest quality output? Why?
 
-**On the pipeline:**
-- Where did a dependency in the wrong order cause a problem?
-- How did the data-testid convention flow from design-agent to playwright-agent?
-- What would break if copilot-instructions.md was missing?
+**On the data-testid contract:**
+- How did the data-testid convention flow through the pipeline?
+- Where could the chain have broken — and what would that look like?
 
-**On human judgment:**
-- What decisions required human judgment that the agent could not make?
-- Was the PR review gate effective as a quality checkpoint?
-- What would you add to the agent instructions to improve output quality?
+**On roles:**
+- What decisions required human judgment the agent could not make?
+- Did your role feel different from normal development work?
 
-**On governance:**
-- Who owns quality in this pipeline?
-- If a test fails in production, which agent is responsible?
-- How would you add a security review step to this pipeline?
+**On real-world applicability:**
+> "Would you use this exact setup in production?"
+
+Suggested answer:
+> "The pattern — agents raising PRs, humans reviewing — absolutely yes.
+> The specific tooling may differ. GitHub Issues works for team-scale
+> projects. Enterprise connects this same pattern to Jira or Azure DevOps
+> via their REST APIs. The agent does not change. Only the integration
+> destination changes."
+
+**On the requirement quality:**
+> "How did the quality of Issue #1 affect what the agents produced?"
+
+This surfaces the most important lesson — garbage in, garbage out.
+A well-written requirement produces well-structured BRD, well-scoped
+user stories, and well-implemented code. The agents amplify whatever
+quality they receive.
 
 ---
 
-## Troubleshooting Reference
+## Troubleshooting
 
-| Problem | Cause | Fix |
-|---------|-------|-----|
-| Agent not in dropdown | `.agent.md` not on main branch | Push `.github/agents/` to main |
-| MCP Issues not created | MCP server not connected or wrong tool names | Verify GitHub MCP in repo settings |
-| Prisma migration error | Old db file conflict | Delete `dev.db`, re-run `prisma migrate dev --name init` |
-| CORS error frontend→backend | Wrong proxy config or wrong port | Check `vite.config.ts` proxy → `http://localhost:3001` |
-| Playwright tests fail | data-testid mismatch | Compare testids in design-doc vs component vs test |
-| Playwright tests fail | Servers not running | Confirm backend 3001 and frontend 5173 are both up |
-| Coding Agent no PR | Agent not enabled | Repo settings → Copilot → Coding Agent → Enable |
-| `npm run test` fails | No seed data | Run `cd src/backend && npx prisma db seed` |
-| Report not generated | `docs/test-reports/` missing | Run `mkdir -p docs/test-reports` at repo root |
-| Prisma client stale | Schema changed, client not regenerated | Run `cd src/backend && npx prisma generate` |
+| Problem | Fix |
+|---------|-----|
+| Agent not in dropdown | Check `.agent.md` is in `.github/agents/` on main |
+| Issues not created after merge | Settings → Actions → Read and write permissions |
+| `GraphQL: Resource not accessible` | Same — Actions permissions not set |
+| Duplicate Issues created | Workflow has exact-match duplicate detection — safe to re-run |
+| `issues/` not triggering workflow | Confirm `.md` files exist — `.gitkeep` alone does not trigger |
+| Prisma errors on migrate | Delete `dev.db` → re-run `prisma migrate dev --name init` |
+| CORS error frontend→backend | Check vite proxy config, confirm backend on port 3001 |
+| Playwright fails on selectors | data-testid values must match exactly between component and test |
+| Coding Agent assigned but no PR | Check Copilot Coding Agent enabled in repo settings |
+| `npm run test` fails | Run `npx prisma db seed` — test user must exist |
+| Agent ignores BRD structure | Check BRD has numbered FRs — agent relies on this structure |

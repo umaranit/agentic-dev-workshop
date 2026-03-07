@@ -23,7 +23,7 @@ export default function App() {
               <Navbar />
               <Routes>
                 <Route path="/home" element={<HomePage />} />
-                {/* Cart routes added by Coding Agent during workshop */}
+                {/* Feature routes are added by Coding Agent during the workshop */}
               </Routes>
             </ProtectedRoute>
           }

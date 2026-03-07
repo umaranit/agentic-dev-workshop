@@ -1,7 +1,7 @@
-# FoodOrder — Agentic SDLC Workshop
+# Agentic SDLC Workshop
 
 A hands-on workshop where developers experience the complete software
-development lifecycle using AI agents — from a 9-line requirement to
+development lifecycle using AI agents — from a business requirement to
 a working, tested application.
 
 ## Workshop Overview
@@ -11,11 +11,11 @@ Issue #1 (requirement)
     ↓ brd-agent
 BRD.md
     ↓ user-story-agent
-4 GitHub Issues
+GitHub Issues (per role per slice)
     ↓ design-agent
-design-doc.md + schema.prisma
+design-doc.md + schema additions
     ↓ Copilot Coding Agent
-Cart API + React components
+Feature API + UI components
     ↓ unit-test-agent
 Jest test suite
     ↓ playwright-agent
@@ -31,53 +31,47 @@ Playwright E2E tests
 | UI Dev | Copilot Coding Agent | github.com |
 | QA Engineer | playwright-agent | github.com |
 
-## Feature Being Built
-**Add to Cart** — customers browse restaurants, view menus, add items
-to a cart, and manage their cart contents.
-
 ## What Is Pre-built
+- Authentication (login + register)
+- JWT middleware
+- User database model
+- Test user via seed data
+- React app shell with routing and Navbar
+- HomePage placeholder
 
-**Functional Features:**
-- Complete authentication system (login + register pages + JWT middleware)
-- Protected route wrapper in React
-- Navbar shell (no functional components yet)
-
-**Data Layer Only (no API or UI):**
-- Database models: User, Restaurant, MenuItem (schema.prisma)
-- Seed data: 2 restaurants, 6 menu items, 1 test user
-- **Note:** Restaurant browsing and menu viewing are NOT implemented yet — these are built during the workshop
-
-**Current State:**
-- App opens to login page 
-- After login, HomePage shows placeholder: "Restaurants and cart features coming soon..."
+All domain models, API routes, UI components, and tests
+are built during the workshop by agents.
 
 ## Getting Started
 
 ```bash
-# 1. Clone the repo
+# Clone the repo
 git clone <repo-url>
-cd foodorderapp
+cd workshop-app
 
-# 2. Install and set up backend
+# Install backend dependencies
+cd src/backend && npm install
+
+# Install frontend dependencies
+cd ../frontend && npm install
+
+# Set up environment
+cp .env.example .env
+
+# Set up database
 cd src/backend
-cp .env.example .env                 # create local environment file
-npm install
 npx prisma migrate dev --name init
 npx prisma db seed
-npm run dev                          # runs on port 3001 — keep this terminal open
 
-# 3. Install and start frontend (open a new terminal)
-cd src/frontend
-npm install
-npm run dev                        # runs on port 5173
+# Start backend (port 3001)
+npm run dev
 
-# 4. Install Playwright (open a new terminal from repo root)
-cd foodorderapp
-npm install
+# Start frontend (port 5173) — new terminal
+cd src/frontend && npm run dev
 ```
 
 ## Test Credentials
-- Email: `test@foodorder.com`
+- Email:    `test@example.com`
 - Password: `password123`
 
 ## Agents Available
@@ -87,7 +81,7 @@ All agents are in `.github/agents/` and available on github.com:
 |-------|---------|
 | brd-agent | Creates BRD from requirement Issue |
 | user-story-agent | Creates GitHub Issues from BRD |
-| design-agent | Creates design doc and schema |
+| design-agent | Creates design doc and schema additions |
 | unit-test-agent | Generates Jest test suite |
 | playwright-agent | Generates Playwright E2E tests |
 

@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 
+const APP_NAME = import.meta.env.VITE_APP_NAME || 'Workshop App'
+
 export default function Navbar() {
   const navigate = useNavigate()
 
@@ -10,54 +12,27 @@ export default function Navbar() {
 
   return (
     <nav style={{
-      background: 'var(--surface)',
-      borderBottom: '1px solid var(--border)',
-      padding: '0 32px',
-      height: '60px',
       display: 'flex',
-      alignItems: 'center',
       justifyContent: 'space-between',
-      boxShadow: 'var(--shadow-sm)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 50,
+      alignItems: 'center',
+      padding: '12px 24px',
+      borderBottom: '1px solid #eee',
+      backgroundColor: '#fff',
     }}>
-      <span style={{
-        fontFamily: 'DM Serif Display, serif',
-        fontSize: '22px',
-        color: 'var(--brand)',
-        letterSpacing: '-0.3px',
-        cursor: 'pointer',
-      }} onClick={() => navigate('/home')}>
-        FoodOrder
+      <span
+        data-testid="nav-logo"
+        style={{ fontWeight: 'bold', fontSize: 20, cursor: 'pointer' }}
+        onClick={() => navigate('/home')}
+      >
+        {APP_NAME}
       </span>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        {/* Cart icon placeholder — added by [FRONTEND] Issue during workshop */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        {/* Feature nav items are added here by Coding Agent during the workshop */}
         <button
-          onClick={handleLogout}
           data-testid="logout-button"
-          style={{
-            padding: '7px 16px',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border)',
-            background: 'transparent',
-            color: 'var(--text-secondary)',
-            fontFamily: 'DM Sans, sans-serif',
-            fontSize: '13px',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={e => {
-            const t = e.currentTarget
-            t.style.borderColor = 'var(--brand)'
-            t.style.color = 'var(--brand)'
-          }}
-          onMouseLeave={e => {
-            const t = e.currentTarget
-            t.style.borderColor = 'var(--border)'
-            t.style.color = 'var(--text-secondary)'
-          }}
+          onClick={handleLogout}
+          style={{ background: 'none', border: '1px solid #ccc', padding: '6px 12px', cursor: 'pointer' }}
         >
           Logout
         </button>
