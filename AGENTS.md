@@ -16,8 +16,6 @@ Read these files first — in this order:
 - `src/frontend/src/App.tsx` — React Router and auth guard
 - `src/frontend/src/pages/LoginPage.tsx`
 - `src/frontend/src/pages/RegisterPage.tsx`
-- `src/frontend/src/pages/LoginPage.tsx`
-- `src/frontend/src/pages/RegisterPage.tsx`
 - `src/prisma/schema.prisma` User model — do not modify the User model
 
 ## Issue Assignment Guide
@@ -27,7 +25,13 @@ You are responsible for:
 - Adding new domain models to `src/prisma/schema.prisma`
 - Running `npx prisma migrate dev --name {descriptive-name}`
 - Running `npx prisma generate`
-- Adding domain seed data to `src/prisma/seed.ts` if the Issue requires it
+- Adding domain seed data to `src/prisma/seed.ts` as specified in the Issue
+- Running `npx prisma db seed` after adding seed data
+
+**Seed data is mandatory — never skip it.**
+The [DATABASE] Issue specifies what sample records to create.
+Empty domain tables cause the frontend to show a blank page
+and Playwright tests to fail — both break the workshop pipeline.
 
 Do not touch backend or frontend files.
 
@@ -59,9 +63,9 @@ Do not touch backend files or schema.prisma.
 
 ## Implementation Order
 Always implement in this order to avoid dependency failures:
-1. [DATABASE] — schema must exist before API can reference models
+1. [DATABASE] — schema + seed data must exist before API can reference models
 2. [BACKEND]  — API must exist before frontend can fetch data
-3. [FRONTEND] — connects to working API
+3. [FRONTEND] — connects to working API with real data
 
 ## PR Conventions
 - Link PR to the originating Issue using `Closes #N`

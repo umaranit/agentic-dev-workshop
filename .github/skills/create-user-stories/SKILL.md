@@ -75,6 +75,7 @@ Use kebab-case slice names derived from the BRD domain language.
 ## Step 3 — Write Each File
 
 ### DATABASE issue format
+
 ```
 # [DATABASE] {Slice Name — from BRD}
 
@@ -93,21 +94,36 @@ This issue adds only the models required for this slice.
 ## Relationships
 - {Entity A} has one/many {Entity B}
 
+## Seed Data
+Add realistic sample data to src/prisma/seed.ts so the app is
+usable immediately after migration — never leave domain tables empty.
+
+{EntityName} — add 3-5 realistic sample records covering:
+- {field}: {example value}
+- {field}: {example value}
+
+Seed data is required for:
+- Frontend to show real content after login (not a blank page)
+- Playwright tests to find and interact with real records
+
 ## Acceptance Criteria
 - [ ] Migration runs without errors
 - [ ] {specific model} created with correct fields and relations
-- [ ] Pre-built models and existing data unchanged
+- [ ] Seed data populates at least 3 sample {entity} records
+- [ ] Pre-built User model and test user unchanged
 ```
 
 **Rules:**
 - Derive model names from BRD domain language
 - Maximum 2 models per issue — split if more needed
 - Reference pre-built models from copilot-instructions.md in Context
+- Always include Seed Data section — empty tables break frontend and tests
 - Never repeat models defined in other issues
 
 ---
 
 ### BACKEND issue format
+
 ```
 # [BACKEND] {Slice Name — from BRD}
 
@@ -141,6 +157,7 @@ This issue adds only the endpoints required for this slice.
 ---
 
 ### FRONTEND issue format
+
 ```
 # [FRONTEND] {Slice Name — from BRD}
 
@@ -181,6 +198,7 @@ Playwright tests will use these — list them explicitly:
 ---
 
 ### PLAYWRIGHT issue format
+
 ```
 # [PLAYWRIGHT] {Feature Name — from BRD}
 
@@ -230,6 +248,7 @@ For every file you write, verify:
 ✅ Title is an H1 heading — will become the GitHub Issue title
 ✅ User story follows "As a... I want... so that..." format
 ✅ Context lists pre-built work from copilot-instructions.md
+✅ DATABASE issues include Seed Data section with realistic sample records
 ✅ FRONTEND issues include "HomePage Update" section with primary component
 ✅ Scope is limited to this slice only
 ✅ Acceptance criteria are specific and verifiable — not vague
