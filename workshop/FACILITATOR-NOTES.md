@@ -2,8 +2,7 @@
 
 **Duration:** 2-3 hours
 **Participants:** 5 (one per role)
-**Goal:** One complete vertical slice — primary feature end to end
-**Extension:** Additional slices for fast groups with time to spare
+**Goal:** One complete vertical slice end to end — from requirement to passing tests
 **Prerequisites:** GitHub accounts, repo access, VS Code installed
 
 ---
@@ -19,6 +18,9 @@
 - [ ] Confirm `AGENTS.md` is on main branch
 - [ ] Confirm `issues/` folder exists with only `.gitkeep` inside
 - [ ] Confirm `.github/workflows/create-issues.yml` is on main branch
+- [ ] Confirm `src/backend/prisma/migrations/` contains ONLY the init migration for User model
+- [ ] Confirm `src/prisma/schema.prisma` has ONLY the User model — no domain models
+- [ ] Confirm `src/prisma/seed.ts` creates ONLY the test user — no domain data
 
 ### GitHub Actions Setup ⚠️ REQUIRED — Do This First
 - [ ] Go to repo → Settings → Actions → General
@@ -27,7 +29,6 @@
 
 > Without this the `create-issues` workflow will fail with:
 > `GraphQL: Resource not accessible by integration`
-> This is a repo-level setting — the workflow YAML alone is not enough.
 
 ### GitHub Configuration
 - [ ] Enable GitHub Copilot for the repository
@@ -39,13 +40,15 @@
 - [ ] `git clone <repo-url>`
 - [ ] `cd src/backend && npm install`
 - [ ] `cd src/frontend && npm install`
-- [ ] `cp .env.example .env`
+- [ ] Copy `.env.example` to `.env` in both `src/backend/` and `src/frontend/`
+- [ ] Set `VITE_APP_NAME` in `src/frontend/.env` to the workshop app name
 - [ ] `cd src/backend && npx prisma migrate dev --name init`
 - [ ] `cd src/backend && npx prisma db seed`
 - [ ] `cd src/backend && npm run dev` → confirm running on port 3001
 - [ ] `cd src/frontend && npm run dev` → confirm running on port 5173
-- [ ] Login with credentials from `.github/copilot-instructions.md`
-- [ ] Confirm app loads and auth works
+- [ ] Login with `test@example.com / password123` → confirm auth works
+- [ ] Confirm browser tab title matches `VITE_APP_NAME`
+- [ ] Confirm HomePage shows "Features coming soon"
 
 ### Verify Agents Work
 - [ ] Go to github.com → repo → Copilot → Agents
@@ -54,18 +57,89 @@
 
 ---
 
+## Workshop Starting State
+
+When participants clone and run the app they will see:
+
+```
+Login page → authenticate → HomePage shows "Features coming soon"
+Navbar: app title (from VITE_APP_NAME) + Logout button — no feature nav yet
+Schema: User model only
+Seed:   test user only — no domain data
+```
+
+Everything else is built during the workshop by agents.
+This is intentional — it demonstrates the full pipeline from scratch.
+
+---
+
 ## Workshop Reset Procedure
 
-> Use this between cohorts or when running the workshop again from scratch.
-> Participants never need to do this.
+> Use between cohorts or before starting fresh.
+> Participants never do this.
+
+### Automated Reset (Recommended)
+
+Two reset scripts are provided in the repo root — use the one for your OS:
+
+**Mac/Linux:**
+```bash
+bash reset-workshop.sh
+```
+
+**Windows PowerShell:**
+```powershell
+# First — allow script execution for this session
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+
+# Then run the script
+.\reset-workshop.ps1
+```
+
+> ⚠️ Windows only: The `Bypass` scope is session-only — closes automatically
+> when you close PowerShell. Nothing permanent changes on your machine.
+> Without this you will see: "File cannot be loaded. The file is not digitally signed."
+
+The script performs all 8 reset steps automatically and verifies the result:
+
+```
+Step 1  Remove BRD.md and design-doc.md
+Step 2  Remove all issues/*.md files
+Step 3  Reset schema.prisma to User model only
+Step 4  Reset seed.ts to test user only
+Step 5  Delete migrations folder and dev.db
+Step 6  Run prisma migrate dev --name init (clean)
+Step 7  Run prisma db seed (test user)
+Step 8  Verify migration contains exactly 1 table (User)
+        → prints OK if clean
+        → prints WARNING with table names if not clean
+```
+
+After the script completes:
+- [ ] Commit and push to main
+- [ ] Close all open Issues on GitHub manually
+- [ ] Confirm app runs — login works, "Features coming soon" appears
+
+### Manual Reset (If Scripts Unavailable)
 
 ```
 Step 1  repo → Issues → select all → Close issues
-Step 2  Delete all .md files inside issues/ folder
-        Leave .gitkeep in place
-Step 3  Commit and push deletion to main
-Step 4  Ready for next run
+Step 2  Delete all .md files inside issues/ folder — leave .gitkeep
+Step 3  Reset schema.prisma to User model only
+Step 4  Reset seed.ts to test user only (test@example.com / password123)
+Step 5  Delete src/backend/prisma/migrations/ folder entirely  ⚠️ CRITICAL
+Step 6  Run: cd src/backend && npx prisma migrate dev --name init
+Step 7  Delete docs/requirements/BRD.md if it exists
+Step 8  Delete docs/design/design-doc.md if it exists
+Step 9  Commit and push to main
 ```
+
+> ⚠️ WHY Step 5 is critical:
+> If old migration files from a previous cohort remain, the Coding Agent
+> sees a mismatch between schema.prisma and migration history. It gets
+> confused trying to reconcile old tables (e.g. Restaurant, MenuItem)
+> with new domain models (e.g. Room, Booking) and either fails or
+> produces incorrect migrations. Always reset migrations between cohorts.
 
 ---
 
@@ -73,9 +147,11 @@ Step 4  Ready for next run
 
 ```
 user-story-agent
-  → reads copilot-instructions.md (app context)
+  → reads copilot-instructions.md (app context, tech stack, pre-built)
   → reads BRD.md (feature requirements)
   → identifies functional slices
+  → derives domain language from BRD
+  → calculates Assignment Order for every Issue
   → writes issue .md files to issues/ folder
   → raises PR
 
@@ -83,30 +159,60 @@ PM reviews PR → merges to main
 
 GitHub Actions (create-issues.yml) triggers automatically
   → reads each .md file in issues/
-  → exact-match duplicate check — skips already-created issues
+  → exact-match duplicate check
   → creates GitHub Issue with correct label
-  → done
 ```
+
+---
+
+## Issue Assignment Order
+
+Every Issue contains an `## Assignment Order` section written by user-story-agent.
+When participants open an Issue they see exactly when to assign it:
+
+```
+## Assignment Order
+Step 3 of 7 — assign after: [DATABASE] {primary slice} is merged
+Tier: BACKEND — primary slice
+```
+
+**The golden rule — always follow this tier sequence:**
+
+```
+DATABASE  (all slices) → BACKEND  (all slices) → FRONTEND  (all slices) → PLAYWRIGHT
+          ↑
+          Primary slice before extension slice within each tier
+```
+
+**Typical order for 2-slice feature:**
+```
+Step 1  [DATABASE]   primary slice     ← assign first, nothing to wait for
+Step 2  [DATABASE]   extension slice   ← wait for Step 1 PR to merge
+Step 3  [BACKEND]    primary slice     ← wait for Step 2 PR to merge
+Step 4  [BACKEND]    extension slice   ← wait for Step 3 PR to merge
+Step 5  [FRONTEND]   primary slice     ← wait for Step 4 PR to merge
+Step 6  [FRONTEND]   extension slice   ← wait for Step 5 PR to merge
+Step 7  [PLAYWRIGHT]                   ← wait for Step 6 PR to merge
+```
+
+Participants never need to figure this out — it is written in each Issue.
 
 ---
 
 ## Issue #1 — Create This Before Workshop Starts
 
-The requirement Issue triggers the entire pipeline.
-Write this based on the feature you have chosen for the workshop.
-It should be a concise business requirement — not a technical spec.
+Write this based on the feature you have chosen for this cohort.
+The requirement should be a concise business need — not a technical spec.
 
 **Suggested format:**
-
 ```
 Title: [REQUIREMENT] {Feature Name}
 
-Body:
 ## Feature Name
 {Feature name}
 
 ## Business Context
-{Why this feature is needed — 2-3 sentences}
+{Why this feature is needed — 2-3 sentences max}
 
 ## What Users Can Do
 - {User action 1}
@@ -114,8 +220,8 @@ Body:
 - {User action 3}
 
 ## Out of Scope
-- {Explicitly excluded item 1}
-- {Explicitly excluded item 2}
+- {Excluded item 1}
+- {Excluded item 2}
 
 ## Acceptance Criteria
 - [ ] {High-level criterion 1}
@@ -125,9 +231,9 @@ Body:
 
 Submit with label: `requirement`
 
-> Keep this requirement focused. The smaller and clearer the requirement,
-> the better the agents perform. One feature with 3-5 user actions
-> is ideal for a 2-3 hour workshop.
+> Keep it focused. One feature with 3-5 user actions is ideal.
+> The agents derive all domain models, API paths, and components
+> from this requirement — the clearer it is, the better they perform.
 
 ---
 
@@ -157,20 +263,16 @@ Submit with label: `requirement`
 > You are not pair programming with AI. You are directing autonomous
 > agents that do the work and raise PRs for your review."
 
+**The starting point:**
+> "When you clone this repo you get auth, a User model, and a page
+> that says 'Features coming soon'. Nothing else. Every model, every
+> API route, every UI component — the agents build it from the
+> requirement you saw in Issue #1."
+
 **Key distinction:**
-> "These agents are not chat assistants. You assign a task, they go away,
-> do the work, and come back with a Pull Request. Your job is to review
-> and merge — or reject and give feedback."
-
-**The goal:**
-> "By the end of this workshop we will have one complete vertical slice
-> running end to end with passing Playwright tests — built entirely by
-> agents, reviewed and guided by you."
-
-**On agent quality:**
-> "Agents make mistakes. That is intentional. The PR review gate is
-> where your expertise matters. Watch for missing data-testid attributes,
-> wrong response shapes, or scope creep — these are real review skills."
+> "These agents are not chat assistants. You assign a task, they go
+> away, do the work, and come back with a Pull Request. Your job is
+> to review and merge — or push back with a comment."
 
 ---
 
@@ -178,38 +280,40 @@ Submit with label: `requirement`
 
 ### Phase 1 — PM (0:30–0:50)
 
-**Watch for:** PM trying to chat with the agent. Remind them — one
-instruction, then wait. Do not keep adding messages.
+**Watch for:** PM chatting with the agent instead of assigning once and waiting.
 
-**brd-agent:** Should produce a BRD with numbered functional requirements
-(FR-001, FR-002...) and an explicit out of scope section.
-If BRD is too vague — PM adds a PR comment asking for more detail.
-Agent will update the PR.
+**brd-agent:** Should produce a BRD with numbered FRs and explicit out of scope.
+If too vague — PM comments on PR requesting more specific acceptance criteria.
 
 **user-story-agent:** Reads copilot-instructions.md and BRD.
-Derives functional slices from the BRD — not from hardcoded templates.
-Creates one issue file per role per slice.
-Primary slice files come first — extension files are additional.
+Derives domain language entirely from BRD — file names, model names,
+endpoint paths all come from the requirement, not hardcoded templates.
+Primary slice = simplest complete journey. Extension slices = additional.
+Every Issue includes an Assignment Order section — participants use this
+to know which Issue to assign next.
 
 **After merge:** GitHub Actions creates Issues automatically.
-PM confirms Issues visible in Issues tab with correct labels
-before handing off to Architect.
+PM confirms Issues visible in Issues tab with correct labels.
 
-**Signal to move on:** Issues visible with correct labels.
+**Signal to move on:** Issues visible with correct labels and Assignment Order sections.
 
 ---
 
 ### Phase 2 — Architect (0:50–1:10)
 
-**Watch for:** design-agent producing schema that does not match
-the [DATABASE] Issue. Check models, fields, and relations match exactly.
+**Critical difference from before:** design-agent now produces ALL domain
+models from scratch — not just adding to existing ones.
+Check the schema carefully — every model the BRD needs should be here.
+
+**Watch for:** Missing relations or models that the BRD implies.
+Architect adds a PR comment if anything is missing.
 
 **Critical gate:** DATABASE PR must be merged before Phase 3.
-Backend Dev cannot reference models that do not exist in schema.
+Backend Dev cannot reference models that do not yet exist.
 
-**data-testid contract:** design-agent should list data-testid values
-in the design doc component tree. These flow to FRONTEND Issue
-and then to Playwright tests. If missing — Architect adds a PR comment.
+**data-testid contract starts here:** design-agent lists data-testid
+values in the component tree. These flow through to FRONTEND Issue
+and Playwright tests. If missing — Architect flags it on the PR.
 
 **Signal to move on:** DATABASE migration PR merged successfully.
 
@@ -217,17 +321,12 @@ and then to Playwright tests. If missing — Architect adds a PR comment.
 
 ### Phase 3 — Backend Dev (1:10–1:30)
 
-**Large PR guidance:** Coding Agent may implement multiple endpoints
-in one PR. Focus review on:
+Focus review on three things only:
 ```
 1. Auth middleware on all protected routes
-2. Response shapes match the [BACKEND] Issue spec exactly
-3. Correct HTTP status codes (200, 201, 401, 404)
+2. Response shapes match the [BACKEND] Issue spec
+3. Correct HTTP status codes
 ```
-Participants do not need to review every line — that is not the point.
-
-**Common issue:** CORS error when frontend calls backend.
-Confirm `vite.config.ts` proxy is set to `http://localhost:3001`.
 
 **Signal to move on:** BACKEND PR merged. Server starts without errors.
 
@@ -235,13 +334,11 @@ Confirm `vite.config.ts` proxy is set to `http://localhost:3001`.
 
 ### Phase 4 — UI Dev (1:30–1:50)
 
-**Critical check:** Are all data-testid values from the [FRONTEND] Issue
-present in the components? If missing — UI Dev adds a PR comment.
-This is a key teaching moment — the data-testid contract flows from
-Issue → component → Playwright test. A break here fails tests later.
-
-**Test locally:** Walk the user journey manually before merging.
-Does it work end to end using real API data?
+**Critical check:** data-testid values from [FRONTEND] Issue present in components.
+If missing → UI Dev adds PR comment requesting them.
+This is the key teaching moment — the data-testid contract flows
+from design-agent → [FRONTEND] Issue → component → Playwright test.
+A break here causes test failures downstream.
 
 **Signal to move on:** FRONTEND PR merged. Journey works in browser.
 
@@ -250,66 +347,27 @@ Does it work end to end using real API data?
 ### Phase 5 — QA (1:50–2:10)
 
 **Watch for:** playwright-agent using CSS selectors instead of data-testid.
-Have QA add a PR comment requesting correction.
-This is the governance teaching moment — agents can get this wrong,
-PR review is the safety net.
+Have QA request correction in PR comment — agents make this mistake.
 
-**Common failure:** data-testid values in tests do not match components.
-Walk through as a process failure — where did the chain break?
-data-testid defined in [FRONTEND] Issue → implemented in component
-→ referenced in [PLAYWRIGHT] Issue → used in Playwright test.
-Find the break point.
-
-**Signal to move on:** `npx playwright test --ui` — primary journey passes.
+**Signal to move on:** `npx playwright test --ui` primary journey passes.
 
 ---
 
 ## Demo Moment (2:10–2:20)
 
-Project `npx playwright test --ui` on screen for the group.
-
-Walk through each step of the test journey.
-After each step narrate which agent contributed to making it work:
-- "The schema that makes this data exist — design-agent + Coding Agent"
-- "The API returning this data — Coding Agent from the [BACKEND] Issue"
-- "The component displaying it — Coding Agent from the [FRONTEND] Issue"
-- "This test step itself — playwright-agent from the [PLAYWRIGHT] Issue"
-
-End with all green. Let it sit for a moment before moving to debrief.
+Project `npx playwright test --ui` on screen.
+At each step narrate which agent produced the code making it work.
+End on all green — let it sit before moving to debrief.
 
 ---
 
 ## Debrief Questions (20 min)
 
-**On agent quality:**
 - Where did an agent produce output that needed correction?
-- What would have happened if you merged without reviewing?
-
-**On the data-testid contract:**
-- How did the data-testid convention flow through the pipeline?
-- Where could the chain have broken — and what would that look like?
-
-**On roles:**
+- How did the data-testid contract flow through the pipeline?
 - What decisions required human judgment the agent could not make?
-- Did your role feel different from normal development work?
-
-**On real-world applicability:**
-> "Would you use this exact setup in production?"
-
-Suggested answer:
-> "The pattern — agents raising PRs, humans reviewing — absolutely yes.
-> The specific tooling may differ. GitHub Issues works for team-scale
-> projects. Enterprise connects this same pattern to Jira or Azure DevOps
-> via their REST APIs. The agent does not change. Only the integration
-> destination changes."
-
-**On the requirement quality:**
-> "How did the quality of Issue #1 affect what the agents produced?"
-
-This surfaces the most important lesson — garbage in, garbage out.
-A well-written requirement produces well-structured BRD, well-scoped
-user stories, and well-implemented code. The agents amplify whatever
-quality they receive.
+- How did the quality of Issue #1 affect everything downstream?
+- What would you change about the agent instructions to improve quality?
 
 ---
 
@@ -317,14 +375,20 @@ quality they receive.
 
 | Problem | Fix |
 |---------|-----|
-| Agent not in dropdown | Check `.agent.md` is in `.github/agents/` on main |
+| Agent not in dropdown | Check `.agent.md` in `.github/agents/` on main |
 | Issues not created after merge | Settings → Actions → Read and write permissions |
 | `GraphQL: Resource not accessible` | Same — Actions permissions not set |
-| Duplicate Issues created | Workflow has exact-match duplicate detection — safe to re-run |
-| `issues/` not triggering workflow | Confirm `.md` files exist — `.gitkeep` alone does not trigger |
+| Duplicate Issues | Workflow has exact-match duplicate detection — safe to re-run |
+| `issues/` not triggering workflow | `.md` files must exist — `.gitkeep` alone does not trigger |
+| Coding Agent confused by migration history | Old migrations from previous cohort present — run reset script |
+| Coding Agent fails on DATABASE Issue | Schema and migrations out of sync — run reset script |
 | Prisma errors on migrate | Delete `dev.db` → re-run `prisma migrate dev --name init` |
 | CORS error frontend→backend | Check vite proxy config, confirm backend on port 3001 |
 | Playwright fails on selectors | data-testid values must match exactly between component and test |
 | Coding Agent assigned but no PR | Check Copilot Coding Agent enabled in repo settings |
 | `npm run test` fails | Run `npx prisma db seed` — test user must exist |
-| Agent ignores BRD structure | Check BRD has numbered FRs — agent relies on this structure |
+| Schema missing domain models | design-agent must run and DATABASE PR must merge before BACKEND |
+| Browser tab shows wrong name | Check `VITE_APP_NAME` in `src/frontend/.env`, restart dev server |
+| Frontend shows blank page after DATABASE merge | Seed data missing — check seed.ts, run `npx prisma db seed` manually |
+| PowerShell script blocked — not digitally signed | Run: `Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process` first |
+| Reset script runs but migration still has domain tables | schema.prisma was not reset — run reset script again, do not run prisma commands manually |

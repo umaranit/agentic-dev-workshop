@@ -16,6 +16,4 @@ model User {
   createdAt DateTime @default(now())
 }
 
-// All domain models are added during the workshop.
-// The design-agent produces schema additions based on the BRD and Issues.
-// The Coding Agent runs migrations when assigned the [DATABASE] Issue.
+// All domain models are added during the workshop by agents

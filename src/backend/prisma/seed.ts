@@ -4,8 +4,8 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  // Test user — used by all agents and Playwright tests
   const hashedPassword = await bcrypt.hash('password123', 10)
+
   await prisma.user.upsert({
     where: { email: 'test@example.com' },
     update: {},
@@ -16,11 +16,8 @@ async function main() {
     },
   })
 
-  console.log('Seed complete — test user created')
-  console.log('Email:    test@example.com')
-  console.log('Password: password123')
-  console.log('')
-  console.log('Domain seed data is added by agents during the workshop.')
+  console.log('Seed complete — test user ready')
+  // Domain seed data is added by agents during the workshop
 }
 
 main()

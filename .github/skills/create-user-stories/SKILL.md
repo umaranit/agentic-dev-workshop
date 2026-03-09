@@ -72,7 +72,58 @@ Use kebab-case slice names derived from the BRD domain language.
 
 ---
 
-## Step 3 — Write Each File
+## Step 3 — Calculate Assignment Order
+
+Before writing any Issue file, calculate the assignment order for every Issue.
+This tells the facilitator exactly which Issue to assign to Copilot next.
+
+### Assignment Order Rules
+
+```
+TIER        SLICE POSITION    ORDER NUMBER
+────────    ──────────────    ────────────
+DATABASE    primary           1
+DATABASE    extension 1       2
+DATABASE    extension 2       3
+BACKEND     primary           next after last DATABASE
+BACKEND     extension 1       next
+BACKEND     extension 2       next
+FRONTEND    primary           next after last BACKEND
+FRONTEND    extension 1       next
+FRONTEND    extension 2       next
+PLAYWRIGHT  (always last)     final number
+```
+
+### Example — 2 slices (primary + 1 extension)
+
+```
+DATABASE  primary     → Step 1 of 7  assign after: nothing (assign this first)
+DATABASE  extension   → Step 2 of 7  assign after: [DATABASE] {primary slice} is merged
+BACKEND   primary     → Step 3 of 7  assign after: [DATABASE] {extension slice} is merged
+BACKEND   extension   → Step 4 of 7  assign after: [BACKEND] {primary slice} is merged
+FRONTEND  primary     → Step 5 of 7  assign after: [BACKEND] {extension slice} is merged
+FRONTEND  extension   → Step 6 of 7  assign after: [FRONTEND] {primary slice} is merged
+PLAYWRIGHT            → Step 7 of 7  assign after: [FRONTEND] {extension slice} is merged
+```
+
+### Example — 1 slice (primary only)
+
+```
+DATABASE  primary     → Step 1 of 4  assign after: nothing (assign this first)
+BACKEND   primary     → Step 2 of 4  assign after: [DATABASE] {primary slice} is merged
+FRONTEND  primary     → Step 3 of 4  assign after: [BACKEND] {primary slice} is merged
+PLAYWRIGHT            → Step 4 of 4  assign after: [FRONTEND] {primary slice} is merged
+```
+
+Write "assign after: nothing (assign this first)" for Step 1 only.
+For all other steps write the exact Issue title the facilitator must wait for.
+
+---
+
+## Step 4 — Write Each File
+
+Add the `## Assignment Order` section as the FIRST section in every Issue file,
+immediately after the User Story. Facilitator sees it instantly when opening the Issue.
 
 ### DATABASE issue format
 
@@ -81,6 +132,10 @@ Use kebab-case slice names derived from the BRD domain language.
 
 ## User Story
 As a system I need {specific models from BRD} so that {specific benefit}
+
+## Assignment Order
+Step {N} of {Total} — assign after: {previous Issue title} is merged
+Tier: DATABASE — {primary / extension} slice
 
 ## Context
 Pre-built models from copilot-instructions.md:
@@ -116,7 +171,7 @@ Seed data is required for:
 **Rules:**
 - Derive model names from BRD domain language
 - Maximum 2 models per issue — split if more needed
-- Reference pre-built models from copilot-instructions.md in Context
+- Always include Assignment Order as first section after User Story
 - Always include Seed Data section — empty tables break frontend and tests
 - Never repeat models defined in other issues
 
@@ -129,6 +184,10 @@ Seed data is required for:
 
 ## User Story
 As a {user type from BRD} I want to {action} so that {benefit}
+
+## Assignment Order
+Step {N} of {Total} — assign after: {previous Issue title} is merged
+Tier: BACKEND — {primary / extension} slice
 
 ## Context
 Pre-built from copilot-instructions.md:
@@ -150,9 +209,9 @@ This issue adds only the endpoints required for this slice.
 **Rules:**
 - Derive endpoint paths from BRD domain language
 - Maximum 3-4 endpoints per issue — split if more needed
+- Always include Assignment Order as first section after User Story
 - Always specify HTTP method, path, request and response shape
 - Always include 401 criterion for protected endpoints
-- Reference pre-built middleware from copilot-instructions.md
 
 ---
 
@@ -163,6 +222,10 @@ This issue adds only the endpoints required for this slice.
 
 ## User Story
 As a {user type from BRD} I want to {action} so that {benefit}
+
+## Assignment Order
+Step {N} of {Total} — assign after: {previous Issue title} is merged
+Tier: FRONTEND — {primary / extension} slice
 
 ## Context
 Pre-built from copilot-instructions.md:
@@ -191,8 +254,8 @@ Playwright tests will use these — list them explicitly:
 **Rules:**
 - Derive component names from BRD domain language
 - Maximum 3-4 components per issue — split if more needed
+- Always include Assignment Order as first section after User Story
 - Always list data-testid values — playwright-agent reads these
-- Reference pre-built components from copilot-instructions.md
 - List the API endpoints this UI calls
 
 ---
@@ -204,6 +267,10 @@ Playwright tests will use these — list them explicitly:
 
 ## User Story
 As a QA engineer I want to verify the {feature} journey end to end
+
+## Assignment Order
+Step {N} of {Total} — assign after: {previous Issue title} is merged
+Tier: PLAYWRIGHT — assign this last, after all FRONTEND Issues are merged
 
 ## Primary Journey — {Slice Name}
 One action per step with expected result:
@@ -233,10 +300,9 @@ These must match the data-testid values in the FRONTEND issues exactly:
 
 **Rules:**
 - One PLAYWRIGHT file per feature — covers primary + optional extension
-- Derive test steps from BRD user journey and acceptance criteria
+- Always last in assignment order — needs all DATABASE, BACKEND, FRONTEND merged
 - data-testid values must match FRONTEND issues exactly
 - Test credentials come from copilot-instructions.md — never hardcode
-- All selectors must use data-testid — never CSS classes or text
 
 ---
 
@@ -247,6 +313,7 @@ For every file you write, verify:
 ```
 ✅ Title is an H1 heading — will become the GitHub Issue title
 ✅ User story follows "As a... I want... so that..." format
+✅ Assignment Order section present in every Issue — correct step number and dependency
 ✅ Context lists pre-built work from copilot-instructions.md
 ✅ DATABASE issues include Seed Data section with realistic sample records
 ✅ FRONTEND issues include "HomePage Update" section with primary component
