@@ -40,8 +40,23 @@
 - [ ] `git clone <repo-url>`
 - [ ] `cd src/backend && npm install`
 - [ ] `cd src/frontend && npm install`
-- [ ] Copy `.env.example` to `.env` in both `src/backend/` and `src/frontend/`
-- [ ] Set `VITE_APP_NAME` in `src/frontend/.env` to the workshop app name
+
+- [ ] Set up backend environment:
+      ```
+      cp src/backend/.env.example src/backend/.env
+      ```
+      No changes needed — defaults work for local workshop use
+
+- [ ] Set up frontend environment:
+      ```
+      cp src/frontend/.env.example src/frontend/.env
+      ```
+      Then open `src/frontend/.env` and set the app name:
+      ```
+      ex VITE_APP_NAME="BookIt"
+      ```
+      This controls the browser tab title, Navbar logo, and Login/Register page heading.
+      Change it to match the feature being built for this cohort.
 - [ ] `cd src/backend && npx prisma migrate dev --name init`
 - [ ] `cd src/backend && npx prisma db seed`
 - [ ] `cd src/backend && npm run dev` → confirm running on port 3001
