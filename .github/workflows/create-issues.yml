@@ -10,6 +10,7 @@ on:
 permissions:
   issues: write
   contents: read
+  
 
 jobs:
   create-issues:
@@ -31,7 +32,7 @@ jobs:
 
       - name: Ensure labels exist
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           gh label create "user-story"  --color "#e4e669" --description "Agent-generated user story" --force
           gh label create "frontend"    --color "#0075ca" --description "Frontend work" --force
@@ -41,7 +42,7 @@ jobs:
 
       - name: Create GitHub Issues from markdown files
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           FILES="${{ steps.get-files.outputs.files }}"
 
